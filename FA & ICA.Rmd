@@ -1,0 +1,136 @@
+---
+title:  "FA and ICA"
+subtitle: "Week 6"
+output:
+   prettydoc::html_pretty:
+    toc: true
+    theme: "hpstr"
+    highlight: "github"
+---
+
+# Instructions
+The output to be handed in should be in html.
+
+# Assignment
+
+The Macroeconomic variables, both real and financial, do have considerable 
+influence, positive as well as negative, on the performance of the corporate 
+sector of the economy. Consequently, the stock markets of the economy got 
+affected by such performance. The movement of stock prices, apart from the 
+firms’ fundamentals, also depends upon the level of development achieved in the 
+economy and its integration towards the world economy.
+Since macroeconomic variables are highly interdependent, using all of them as
+explanatory variables in affecting the stock market may pose a severe 
+multicolinearity problem and it becomes difficult to delineate the separate 
+affects of different variables on the stock market movement. Deriving basic 
+factors from such macroeconomic variables and employing these factors in pricing
+models can provide valuable information about the contents of priced factors in
+different stock markets. Generating orthogonal factor realizations eliminates
+the multicolinearity problem in estimating factor regression coefficients and
+serves to find the factors that are rewarded by the market. In this assignment,
+such factors will be extracted from twelve macroeconomic variables in India. 
+The variables are:
+
+  +   ***Money Supply (MS)***
+  +  ***Consumer Price Index (CPI)***
+  +  ***Gold Prices (GP)***
+  +  ***Crude Oil Prices (COP)***
+  +  ***Foreign Exchange Reserves (FER)***
+  +  ***Foreign Direct Investment (FDI)***
+  +  ***Foreign Institutional Investment (FII)***
+  +  ***Call Money Rate (CMR)***
+  +  ***Balance of Trade (BOT)***
+  +  ***Foreign Exchange Rate (ER)***
+  +  ***Repo Rate (Repo)***
+  +  ***Industrial Growth Rate (IGR)***
+  
+The standardized observations in the data file *IndianSM.txt* are based on
+monthly averages, for 149 months.
+
+```{r, message=FALSE}
+
+IndianSM <- read.table("IndianSM.txt", header = T)
+
+```
+
+
+## Question A
+*Factor analyze the data and determine how many common factors are at least*
+*needed to explain at least 80% of the total variance.*
+```{r}
+
+results <- factanal(IndianSM, 5, scores="regression") 
+
+results$scores |> head(10)
+
+results$loadings
+
+# No common factors that can be explained by at least 80% of the total variance.
+```
+
+
+## Question B
+*Does the factor model with the in (a) selected number of common factors fit*
+*to the data? Why?*
+```{r}
+
+
+
+results$uniquenesses
+
+# Model with 5 factors fits well to the data
+
+# The uniqueness values should ideally be low. High uniqueness values suggest 
+# that a variable is not well explained by the factors and may not fit the
+# model well.
+
+```
+
+
+## Question C
+*Give the correlations between the ‘regression’ factor scores, given the in* 
+*(a) selected number of common factors.*
+```{r}
+
+cor(results$scores)
+
+```
+
+## Question D
+*Carry out an independent component analysis and determine the number of* 
+*independent components. How many independent components do you select? Why?*
+```{r, message=FALSE}
+library(fastICA)
+set.seed(100)
+
+result_ICA <- fastICA(IndianSM, 3)
+
+x <- c(result_ICA$X)
+e <- c(result_ICA$S%*%result_ICA$A)
+evar <- (2*t(x)%*%e-t(e)%*%e)/t(x)%*%x
+evar
+
+# It is advisable to use components that explain at least 80% to 90% of the 
+# total variance.
+
+# Our variance is 85.6% thus 3 components are ok
+```
+
+## Question E
+*Give the correlations between the features (macro-economic variables) and* 
+*the independent components. Use these correlations to interpret the* 
+*independent components.*
+
+```{r}
+
+cor(IndianSM, result_ICA$S)
+
+# Foreign Institutional Investment (FII) has negative correlation with component
+# 1 and 2. Foreign Exchange Rate (ER) has the negative correlation 
+# with component 1 and 3. Balance of Trade (BOT) has the highest positive 
+# correlation with component 1. Repo Rate (Repo) has the highest positive 
+# correlation with component 2. Industrial Growth Rate (IGR) has the highest 
+# negative correlation with component 2. 
+
+```
+
